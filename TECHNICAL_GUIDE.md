@@ -400,18 +400,18 @@ carriers indiscriminately can amplify noise or introduce incorrect samples.
 
 ```mermaid
 flowchart TD
-    A[OFDM receive samples] --> B[Frame/carrier sync, CP removal, FFT]
-    B --> C[Pilot CSI and initial equalization]
-    C --> D[Detect active REs and recover payload reference]
+    A[OFDM\nreceive\nsamples] --> B[Frame/carrier sync,\nCP removal,\nFFT]
+    B --> C[Pilot CSI and\ninitial\nequalization]
+    C --> D[Detect active REs\nand recover\npayload\nreference]
     D --> E[Refined equalization / Turbo-CPCL]
-    E --> F[Active-RE inverse filtering with SNR weights]
-    F --> G[Per-symbol CIR sequence]
-    G --> H{Resource grid}
-    H -->|Dense and uniform| I[Frequency FFT then slow-time FFT]
-    H -->|Sparse or irregular| J[Weighted complex path-model fit]
-    I --> K[LOS/BTP detection and relative eToF/eDoppler]
+    E --> F[Active-RE inverse\nfiltering\nwith SINR weights]
+    F --> G[Per-symbol\nCIR sequence]
+    G --> H{Resource\ngrid}
+    H -->|Dense and uniform| I[Frequency FFT\nthen slow-time FFT]
+    H -->|Sparse or irregular| J[Weighted complex\npath-model fit]
+    I --> K[LOS/BTP detection and\nrelative eToF/eDoppler]
     J --> K
-    K --> L[Multilink association and state fusion]
+    K --> L[Multilink association\nand state fusion]
 ```
 
 ### 5.2 Turbo-CPCL processing algorithm
