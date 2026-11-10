@@ -80,13 +80,13 @@ flowchart LR
     T[Illuminating\nradio node] -->|communication\nwaveform| X((Target))
     X -->|bistatic echo| R1[Rx / sniffer 1]
     X -->|bistatic echo| R2[Rx / sniffer 2]
-    T -->|direct LOS reference| R1
-    T -->|direct LOS reference| R2
-    R1 --> S[Local sensing and delay-Doppler estimates]
+    T -->|direct LOS\nreference| R1
+    T -->|direct LOS\nreference| R2
+    R1 --> S[Local sensing\nand\ndelay-Doppler estimates]
     R2 --> S
-    S --> F[Site / cloud fusion and tracking]
-    F --> U[Authorized application or operator view]
-    F -. CSI, schedule and mission feedback .-> T
+    S --> F[Site / cloud\nfusion and tracking]
+    F --> U[Authorized\napplication\nor operator view]
+    F -. CSI, schedule and\nmission feedback .-> T
 ```
 
 ### Cooperation layers
