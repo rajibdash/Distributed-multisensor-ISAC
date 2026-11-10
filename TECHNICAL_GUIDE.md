@@ -407,11 +407,11 @@ flowchart TD
     E --> F[Active-RE inverse\nfiltering\nwith SINR weights]
     F --> G[Per-symbol\nCIR sequence]
     G --> H{Resource\ngrid}
-    H -->|Dense and uniform| I[Frequency FFT\nthen slow-time FFT]
-    H -->|Sparse or irregular| J[Weighted complex\npath-model fit]
+    H -->|Dense and uniform| I[Frequency FFT\nthen\nslow-time FFT]
+    H -->|Sparse or irregular| J[Weighted complex\npath-model\nfit]
     I --> K[LOS/BTP detection and\nrelative eToF/eDoppler]
     J --> K
-    K --> L[Multilink association\nand state fusion]
+    K --> L[Multilink\nassociation\nand\nstate fusion]
 ```
 
 ### 5.2 Turbo-CPCL processing algorithm
