@@ -825,3 +825,343 @@ resource allocation, time-reversal and spatial precoding, synchronization,
 fusion/tracking, and the measurement example summarized above. It is a
 principles/review article: detailed propagation simulation, a complete
 end-to-end scheduler, and a public implementation are outside its scope.
+
+## 11. Power constraints and optimization opportunities
+
+This section and sections 12-13 are an additive research update dated
+2026-11-10. They supplement, rather than replace, the preceding source-paper
+summary. References [P1]-[S4] identify related literature; equations and
+implementation policies explicitly called **proposed** are extensions for
+this guide, not algorithms supplied by the source paper. No universal power
+saving, sensing-reservation percentage, or deployment-ready optimizer is
+claimed.
+
+### 11.1 Which power constraints matter?
+
+**Distributed multisensor ISAC is power constrained, but adding receivers
+does not necessarily multiply illumination power.** Several receive-only
+sensors can observe one broadcast transmission, as in section 4. Their
+receiver, processing, synchronization, and reporting costs still increase
+system energy consumption.
+
+| Constraint or cost | What to model | Consequence for optimization |
+|---|---|---|
+| Per-transmitter RF power | Each gNB/TRP, UE, or illuminator has its own maximum transmit power. Include per-antenna limits where relevant. | A network-wide sum-power constraint alone can admit physically impossible allocations. |
+| Shared communication/sensing waveform | Communication payload and beams may also illuminate targets. Optional sensing-only signals consume additional resources and power. | Do not automatically count the same radiated waveform twice as separate communication and sensing power. |
+| Average, peak, and radiated-power limits | Average RF power, amplifier back-off/PAPR, permitted EIRP, and applicable spectral masks are distinct limits. | A feasible average-power solution can still violate hardware or emission constraints. Use deployment-specific limits, not assumed universal values. |
+| Battery and duty cycle | Mobile nodes consume energy during Tx, Rx, processing, synchronization, and reporting, including switching/wakeup overhead. | Optimize energy over a scheduling horizon, not just instantaneous radiated power. |
+| Active-node overhead | RF chains, ADCs, baseband processing, and transport can consume power even at low transmit power. | Reducing RF power alone need not minimize total system consumption; selective activation can matter. |
+| Interference and receiver dynamic range | Direct-path illumination, clutter, other transmitters, and self/cross-link interference affect usable echo quality. | Increasing transmit power can also increase interference or saturation; model sensing SINR and receiver feasibility. |
+
+Section 3.4 gives the simplified bistatic echo dependence
+\(P_r\propto P_t/(R_t^2R_r^2)\). Favorable node placement and geometry can
+therefore be more valuable than increasing power on a weak link. Increasing
+all powers also cannot repair an unobservable position or distinguish
+ambiguities caused by a poor resource pattern.
+
+### 11.2 What optimization research is already available?
+
+The following are literature findings, not claims that this repository
+implements those methods:
+
+| Research direction | Established problem setting | Relevance and boundary |
+|---|---|---|
+| Sensing-aware power allocation [P1] | Cell-free massive-MIMO multistatic detection; maximize sensing SINR while meeting minimum communication SINR and per-AP power constraints. | A concrete starting point for distributed infrastructure power control. Its detection objective is not automatically a localization or tracking guarantee. |
+| Joint sensing/communication beamforming [P2] | Joint beamformer design in cell-free ISAC MIMO systems. | Spatial power control can improve the sensing/communication tradeoff. Transfer requires checking the paper's channel, coordination, and coherence assumptions. |
+| Joint AP activation and power allocation [P3] | Select active APs together with their powers to reduce consumption in cell-free ISAC. | Supports studying node-selection savings beyond RF power adjustment. Account for receiver and transport costs appropriate to this deployment. |
+| Joint resource and power allocation [S2, S4] | Optimize OFDM resources with sensing/communication constraints; dynamic TDD additionally couples resources to AP modes. | Power control should ultimately use the same resource mask and Tx/Rx decisions as the scheduler. |
+
+Cell-free infrastructure results do not directly establish performance for
+asynchronous CPCL sniffers, arbitrary mobile meshes, or extended targets with
+noncoherent returns. Solver details and numerical gains must be checked in
+the selected paper and reproduced under the simulator's assumptions before
+being used as benchmarks.
+
+### 11.3 Proposed geometry-aware minimum-power baseline
+
+First fix beams, participating nodes, and the time-frequency mask. A useful
+**proposed baseline**, assuming continuous operation over the fixed interval,
+is
+
+\[
+\begin{aligned}
+\min_{\mathbf p,\mathbf a}\quad&
+\sum_i\left(\frac{p_i}{\eta_i}+a_iP_{\mathrm{fixed},i}\right)\\
+\text{subject to}\quad&
+0\le p_i\le a_iP_i^{\max},\qquad a_i\in\{0,1\},\\
+&\mathrm{SINR}^{\mathrm{comm}}_u\ge\gamma_u,\quad \forall u,\\
+&\mathbf J_{\mathrm{pos}}\succ0,\qquad
+\operatorname{tr}(\mathbf J_{\mathrm{pos}}^{-1})
+\le\epsilon_{\mathrm{pos}}^2 .
+\end{aligned}
+\]
+
+Here \(p_i\) is total radiated power at node \(i\), \(\eta_i\) is amplifier
+efficiency, and \(P_{\mathrm{fixed},i}\) is active-node operating power.
+A receive-only node has \(p_i=0\) but can have nonzero operating power.
+Initially hold \(\mathbf a\) fixed; subsequently optimize activation as well.
+The objective is electrical power in watts; multiply by the fixed interval
+to obtain energy. Variable duty cycles require the energy model in section
+12.3 instead.
+
+\(\mathbf J_{\mathrm{pos}}\) is effective position information after
+accounting for unknown channel, clock, and other nuisance parameters. For an
+identifiable nuisance block, this is the Schur complement
+\(\mathbf J_{xx}-\mathbf J_{xz}\mathbf J_{zz}^{-1}\mathbf J_{zx}\), not
+simply the position block of the full FIM. Sum independent measurement
+information before eliminating shared nuisance parameters; correlated
+observations require their joint covariance. Reject singular/unobservable
+geometries rather than reporting a misleading finite bound using a
+pseudoinverse.
+
+The CRB is a local lower bound under the assumed statistical model, not an
+achieved RMSE or detection guarantee. Evaluate actual localization error,
+missed detections, outliers, and synchronization mismatch as well. If the
+application is detection rather than localization, use a validated detection
+constraint at a specified false-alarm rate instead of substituting a position
+CRB.
+
+With fixed masks and beams, some simplified power-control problems are
+convex; general interference-coupled formulations need not be. Adding binary
+activation, beams, or resource decisions generally creates a nonconvex
+mixed-integer problem. Alternating optimization or successive convex
+approximation are candidate implementation techniques, not guarantees of a
+global optimum for this proposed model.
+
+## 12. Scheduling constraints and joint power-resource design
+
+### 12.1 Scheduling is more than assigning a sensing PRB percentage
+
+The source article [S1] describes sensing-aware radio access and adaptive
+sensing cycles. Related research explicitly treats limited OFDM occupancy
+[S3], dynamic-TDD resource and AP-mode allocation [S2], and cooperative
+resource-element/power design with ambiguity constraints [S4].
+
+The following checklist combines those research directions with engineering
+constraints for the deployments in this guide. It is not a claim that every
+cited paper includes every constraint, or that a research scheduler is a
+standardized NR procedure.
+
+| Scheduling constraint | Why it matters | Required scheduler/estimator treatment |
+|---|---|---|
+| Communication commitments | Rate floors alone do not ensure packet deadlines, reliability, or fairness. Control, reference signals, guards, and retransmissions also occupy resources. | Protect mandatory resources and separately track goodput, queueing/deadline misses, and sensing reservations. |
+| Half-duplex and TDD availability | A half-duplex node cannot illuminate and receive on the same carrier at the same instant. UL/DL directions and switching guards limit feasible links. | Jointly choose Tx/Rx roles and time windows. Full-duplex requires an explicit residual self-interference and isolation model. |
+| Mixed duplexing/numerology | Nodes may not share bands, symbol boundaries, or available transmit/receive periods. | Use each link's actual waveform and timestamps; enforce band compatibility, guards, and cross-link/inter-numerology interference constraints. |
+| Transmitter separation and reuse | Overlapping illuminators can be inseparable or interfere. One distinguishable broadcast waveform can nevertheless support many receivers. | Use orthogonal REs, separable waveforms, or an explicitly modeled spatial/coherent reuse scheme. Do not assign exclusive downlink REs to every listening receiver. |
+| Frequency aperture and occupancy | Fragmentation changes RMS bandwidth and ambiguity sidelobes; equal PRB counts can have different sensing performance. | Evaluate the actual frequency mask, power weights, and ambiguity region, not only occupied bandwidth or CRB. |
+| Slow-time sampling | Sparse/interleaved opportunities change Doppler ambiguity and sample support. | Schedule adequate repetition for the expected Doppler range and pass actual sample times to the estimator. |
+| Coherent processing interval (CPI) | Longer integration improves local precision but adds latency and can violate phase stability or target-motion assumptions. | Bound CPI using coherence, range migration, acceleration, and reporting deadlines; apply motion compensation when justified. |
+| Target revisit and measurement age | A target can become poorly tracked between otherwise accurate observations. | Enforce task-specific revisit/deadline requirements and predict uncertainty to the fusion/output epoch. |
+| Geometry and observability | Several strong links can still provide nearly redundant position information. | Select links jointly for visibility, independent geometry, uncertainty, and robustness; do not rank by SNR alone. |
+| Synchronization and calibration | Timing, frequency, phase drift, and stale calibration consume budget and bias measurements. | Reserve needed calibration/reference opportunities and include residual errors in the measurement model. Do not assume network-wide phase coherence. |
+| Reporting, fronthaul, and compute | Raw samples, local parameters, and tracks have different bit rates and processing delays. | Budget report transmissions, transport queues, and processing capacity; use a fusion representation that can meet the deadline. |
+| Energy and activation | Aggressive revisits or frequent wakeups can exhaust mobile nodes despite low average RF power. | Couple duty cycle, node activation, and switching energy to power allocation. |
+
+### 12.2 Precision, ambiguity, and freshness are different constraints
+
+For an illustrative single-link model with uniformly spaced slow-time
+samples separated by \(\Delta t_s\), Doppler aliases with period
+\(1/\Delta t_s\). A conventional centered unambiguous interval is
+
+\[
+|\nu|<\frac{1}{2\Delta t_s},
+\qquad
+\Delta\nu_{\mathrm{res}}\approx\frac{1}{T_{\mathrm{CPI}}}.
+\]
+
+These are sampling/aperture relationships, not achieved estimation-error
+bounds. Bistatic Doppler-to-velocity conversion depends on Tx-target-Rx
+geometry; do not apply the monostatic factor \(v=\lambda\nu/2\) universally.
+For irregular schedules, neither the mean spacing nor one largest-gap rule
+fully characterizes ambiguity: evaluate the actual sample pattern.
+
+Similarly, contiguous frequency aperture \(B_{\mathrm{span}}\) gives a
+nominal delay-resolution scale near \(1/B_{\mathrm{span}}\), while a uniform
+frequency comb with spacing \(\Delta f_s\) has delay replicas spaced by
+\(1/\Delta f_s\). These simplified relationships do not replace CP,
+observation-window, multipath, and reference-recovery feasibility checks.
+They concern delay, not a universal monostatic range conversion.
+
+For a known waveform and a simplified isolated-link matched-filter model,
+a useful normalized mask diagnostic is
+
+\[
+A(\delta\tau,\delta\nu)=
+\frac{\left|\sum_{(n,k)\in\Omega}
+e_{n,k}\exp\!\left(j2\pi[f_n\delta\tau-t_k\delta\nu]\right)\right|}
+{\sum_{(n,k)\in\Omega}e_{n,k}},
+\]
+
+where \(e_{n,k}\) is transmitted RE energy. Evaluate nonempty masks and
+measure sidelobes over a declared delay-Doppler region **excluding the
+intended mainlobe**. The complete channel/waveform model may require a more
+detailed ambiguity function. Two schedules can have favorable local CRBs
+but different false-peak behavior; test both.
+
+Resource-occupancy research [S3] studies CRB-oriented waveform design and
+model-based recovery of undersampled sensing channels. Such recovery relies
+on structural assumptions; reconstructed samples are not independent new
+measurements and must not be counted as extra observed REs in the FIM.
+Cooperative allocation research [S4] explicitly combines RE/power choices
+with ambiguity-sidelobe constraints.
+
+For tracking, add freshness requirements such as
+
+\[
+t^{\mathrm{obs}}_{q,m+1}-t^{\mathrm{obs}}_{q,m}\le G_q^{\max},
+\qquad
+t^{\mathrm{output}}_{q,m}-t^{\mathrm{obs}}_{q,m}\le D_q^{\max}.
+\]
+
+Here \(q\) identifies a target/task; \(G_q^{\max}\) and \(D_q^{\max}\) are
+application-defined revisit and end-to-end age limits, not universal values
+from the cited papers. Define the observation epoch explicitly for a CPI.
+Include acquisition, processing, reporting, transport, and fusion delays in
+output age. Propagate track covariance to that output epoch; a small CRB at
+an old measurement time is not sufficient.
+
+### 12.3 Proposed joint scheduling model
+
+Use the following as a **simulation proposal**, not a reproduction of one
+paper's complete optimization problem.
+
+Let \(x_{i,n,k}\) indicate transmission by node \(i\) on subcarrier \(n\),
+symbol \(k\); let \(p_{i,n,k}\) be its average RF power on that RE.
+Let \(t_{i,k}\), \(r_{i,k}\), and \(a_{i,k}\) be binary Tx, Rx, and active
+indicators. For half-duplex nodes on the modeled carrier, require
+
+\[
+x_{i,n,k}\le t_{i,k},\qquad
+t_{i,k}+r_{i,k}\le a_{i,k},\qquad
+0\le p_{i,n,k}\le x_{i,n,k}P_{i,n,k}^{\max},\qquad
+\sum_n p_{i,n,k}\le P_i^{\max}.
+\]
+
+Also enforce configured TDD/band availability and switching guards. A
+selected observation of transmitter \(i\) by receiver \(j\) must have both
+the corresponding transmission and \(r_{j,k}=1\), plus an available reference
+and sufficient echo quality. Several receivers can select that same
+transmission: their observations do not each consume a new downlink RE.
+
+If choosing network-wide orthogonal illumination as a baseline, impose
+\(\sum_i x_{i,n,k}\le1\) within that coordination domain. This is a deliberate
+model restriction, **not** a universal ISAC requirement. Spatial reuse or
+joint transmission needs a different interference/separability model.
+
+A horizon energy objective can be written as
+
+\[
+\min E_{\mathrm{total}}=
+\sum_k\Delta t_k\sum_i
+\left(\frac{\sum_n p_{i,n,k}}{\eta_i}
++P^{\mathrm{op}}_{i,k}\right)
++E_{\mathrm{switch}}+E_{\mathrm{report/transport}},
+\]
+
+where \(\Delta t_k\) is the modeled symbol duration, RF powers sum across
+simultaneous subcarriers, and \(P^{\mathrm{op}}_{i,k}\) includes mode-dependent
+receiver/baseband/idle power. Specify accounting boundaries so that reporting
+RF energy or transport power is not counted twice.
+
+Constrain this objective by communication QoS/deadlines, node energy
+budgets, per-node power limits, feasible Tx/Rx modes, sensing accuracy and
+observability, revisit/output-age limits, ambiguity sidelobes, and
+reporting/compute capacity. For example, a horizon transport constraint
+\(\sum_\ell b_\ell\le C_{\mathrm{transport}}H\) is only a capacity check;
+individual report deadlines additionally require a queue/service model.
+Here \(b_\ell\) is report size in bits, \(C_{\mathrm{transport}}\) is bit/s,
+and \(H\) is horizon duration in seconds.
+
+Compute information from the actual selected observations and powers.
+Additivity requires appropriate conditional independence or a joint
+noise/correlation model; separate receiver reports sharing a reference can
+have correlated errors. For tracking, combine the dynamic prior and new
+measurements in an appropriate filtering/posterior-information model rather
+than treating a static CRB as the predicted track covariance.
+
+### 12.4 Practical solution strategy and infeasibility handling
+
+1. **Screen feasible links:** use band/TDD availability, reference recovery,
+   visibility, calibration, receiver limits, and geometry. Predict target
+   state and communication demand over a short horizon.
+2. **Solve a fixed-schedule baseline:** hold beams, masks, and active nodes
+   fixed; optimize power under communication and sensing requirements.
+   Record solver feasibility and constraint residuals.
+3. **Improve discrete choices:** exchange candidate REs or nodes using
+   geometry/information gain per incremental energy, while retaining
+   Doppler sampling, ambiguity, and deadline constraints. Recompute the
+   continuous power solution after each accepted change.
+4. **Scale deliberately:** use mixed-integer optimization on small instances
+   as a reference. Consider relaxation, alternating optimization, or
+   successive approximation for larger cases; verify feasibility after
+   rounding and do not claim global optimality without a proof.
+5. **Execute in receding horizon:** freeze mandatory/imminent allocations,
+   include coordination and solver runtime, then update from actual
+   detections, channel estimates, queues, and track uncertainty.
+
+If requirements cannot be met, explicitly report which constraints are
+infeasible or violated. Distinguish proven infeasibility from solver timeout
+or failure to find a feasible point. Do not silently relax communication
+protection or issue an apparently valid track. Any fallback, such as a
+longer revisit interval, reduced coverage, or dropped low-priority sensing
+task, requires an explicit application policy and degraded-status output.
+
+### 12.5 Validation additions to the experiment matrix
+
+These experiments extend section 8.4; they are proposed comparisons rather
+than published performance claims.
+
+| Comparison or stress case | What to hold constant or measure |
+|---|---|
+| Equal power/all eligible nodes vs optimized powers vs joint activation | Use the same task requirements and traffic; report total electrical energy, not only RF power. |
+| Uniform/interleaved vs compact vs fragmented/adaptive masks | Compare equal occupied RE count and energy; measure delay/Doppler ambiguity, actual RMSE, false peaks, and CRB. |
+| Communication-only payload reuse vs optional sensing-only REs | Track incremental reservation and actual communication goodput/deadline effects separately. |
+| Fixed TDD vs optimized feasible Tx/Rx modes | Include guard time, switching cost, cross-link interference, and unavailable observations. |
+| Static accuracy objective vs freshness-aware tracking | Measure output-epoch position/velocity error, revisit gaps, measurement age, and track loss under motion. |
+| Raw-data vs parameter/track reporting | Measure transport bits, queue delay, processing time, information loss, and correlation handling. |
+| Ideal knowledge vs stale CSI, drift, blockage, and uncertain target RCS | Test sensitivity, outages, robust margins, and truthful infeasibility/degraded-status reporting. |
+| Small exact reference vs scalable heuristic | Report runtime, feasible-solution rate, constraint residuals, and objective gap where an optimum/bound is available. |
+
+Keep detection probability at a declared false-alarm rate, localization and
+velocity error, communication service, and energy on the same comparison
+plots or Pareto analysis. Evaluate independent trials and confidence
+intervals; no single SNR, CRB, or energy percentage establishes overall
+superiority.
+
+## 13. Research references for the power and scheduling update
+
+The following links identify the investigated literature. Preprints are
+research proposals/results, not standards or field-deployment guarantees.
+The descriptions above deliberately avoid unverified numerical savings and
+do not assume that one paper covers all constraints in the proposed model.
+
+- **[P1]** Zinat Behdad et al., "Multi-Static Target Detection and Power
+  Allocation for Integrated Sensing and Communication in Cell-Free Massive
+  MIMO," IEEE Transactions on Wireless Communications, 2024; preprint
+  initially posted in 2023:
+  <https://arxiv.org/abs/2305.12523>.
+- **[P2]** Umut Demirhan and Ahmed Alkhateeb, "Cell-Free ISAC MIMO Systems:
+  Joint Sensing and Communication Beamforming," 2023 preprint:
+  <https://arxiv.org/abs/2301.11328>.
+- **[P3]** "Joint Access Point Activation and Power Allocation for Cell-Free
+  Massive MIMO Aided ISAC Systems," 2025 preprint:
+  <https://arxiv.org/abs/2507.09425>.
+- **[S1]** Reiner Thoma et al., "Distributed multisensor ISAC," 2026:
+  <https://doi.org/10.1038/s44459-026-00041-2>; preprint:
+  <https://arxiv.org/abs/2511.13104>. This is the source discussed in
+  sections 1-10, not a newly supplied scheduler implementation.
+- **[S2]** "Resource Allocation for Dynamic TDD-Enabled Integrated Sensing
+  and Communication Systems," IEEE Transactions on Vehicular Technology,
+  2025: <https://ieeexplore.ieee.org/document/10884055>.
+  Joint power/subcarrier allocation and AP-mode selection under sensing
+  CRLB and transmit-power constraints; alternating optimization is a
+  published solution direction.
+- **[S3]** Silvia Mura et al., "Waveform Design for OFDM-based ISAC Systems
+  Under Resource Occupancy Constraint," 2023 preprint:
+  <https://arxiv.org/abs/2312.12298>. Relevant to limited occupancy,
+  delay/Doppler CRB, and recovery of undersampled sensing channels.
+- **[S4]** Shoushuo Zhang et al., "Cooperative OFDM-ISAC Networks: Performance
+  Analysis and Resource Allocation," 2026 preprint:
+  <https://arxiv.org/abs/2604.26552>. Studies cooperative fusion and joint
+  RE/power allocation with per-BS budgets, communication requirements,
+  and delay-Doppler ambiguity-sidelobe constraints.
