@@ -377,7 +377,7 @@ flowchart LR
     E --> F[Predict target\nand\nlink geometry]
     F --> C
     E -. lost track\nor new area .-> A
-    C -. balance sensing\nwith data service .-> G[Communication QoS]
+    C -. balance sensing\nwith data service .-> G[Communication\nQoS]
 ```
 
 ## 5. CPCL reference recovery and delay-Doppler processing
@@ -582,12 +582,12 @@ measurement age attached to all reports.
 
 ```mermaid
 flowchart LR
-    A[Per-link observables<br/>delay, Doppler, direction, confidence, time] --> B[SLC<br/>path and target measurements]
-    B --> C[IntraSC<br/>time alignment, association, robust fusion]
-    C --> D[Local tracks and mission control]
-    D --> E[InterSC<br/>track/trajectory fusion]
-    E --> F[Global situation picture]
-    D -. resource requests and predicted geometry .-> B
+    A[Per-link observables<br/>delay,\nDoppler,\ndirection,\nconfidence,\ntime] --> B[SLC<br/>path and target\nmeasurements]
+    B --> C[IntraSC<br/>time alignment,\nassociation,\nrobust fusion]
+    C --> D[Local tracks and\nmission control]
+    D --> E[InterSC<br/>track/trajectory\nfusion]
+    E --> F[Global situation\npicture]
+    D -. resource requests\nand predicted\ngeometry .-> B
 ```
 
 ## 8. Simulation recipe
