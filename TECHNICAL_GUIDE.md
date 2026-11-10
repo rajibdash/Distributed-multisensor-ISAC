@@ -77,7 +77,7 @@ geometric constraints.
 
 ```mermaid
 flowchart LR
-    T[Illuminating radio node] -->|communication waveform| X((Target))
+    T[Illuminating\nradio node] -->|communication\nwaveform| X((Target))
     X -->|bistatic echo| R1[Rx / sniffer 1]
     X -->|bistatic echo| R2[Rx / sniffer 2]
     T -->|direct LOS reference| R1
