@@ -84,7 +84,7 @@ flowchart LR
     T -->|direct LOS\nreference| R2
     R1 --> S[Local sensing\nand\ndelay-Doppler\nestimates]
     R2 --> S
-    S --> F[Site / cloud\nfusion and tracking]
+    S --> F[Site / cloud\nfusion and\ntracking]
     F --> U[Authorized\napplication\nor operator view]
     F -. CSI, schedule and\nmission feedback .-> T
 ```
@@ -370,14 +370,14 @@ especially the MS radio access discussion (pp. 11–13) and resource scheduling
 
 ```mermaid
 flowchart LR
-    A[Surveillance and acquisition] --> B[Coarse target hypotheses]
-    B --> C[Choose links and allocate REs]
-    C --> D[Refine delay, Doppler, and direction]
-    D --> E[Associate and update tracks]
-    E --> F[Predict target and link geometry]
+    A[Surveillance\nand\nacquisition] --> B[Coarse target\nhypotheses]
+    B --> C[Choose links\nand allocate REs]
+    C --> D[Refine delay,\nDoppler,\nand direction]
+    D --> E[Associate and\nupdate tracks]
+    E --> F[Predict target\nand\nlink geometry]
     F --> C
-    E -. lost track or new area .-> A
-    C -. balance sensing with data service .-> G[Communication QoS]
+    E -. lost track\nor new area .-> A
+    C -. balance sensing\nwith data service .-> G[Communication QoS]
 ```
 
 ## 5. CPCL reference recovery and delay-Doppler processing
