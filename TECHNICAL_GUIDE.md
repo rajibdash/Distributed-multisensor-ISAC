@@ -2,8 +2,15 @@
 
 This guide consolidates the system model, estimation methods, coordination
 principles, and measurement example in the source paper into a simulation-first
-reference. It emphasizes relationships and implementation steps rather than
-reproducing the paper's figures.
+reference. It combines implementation-oriented explanations with selected
+figures reproduced from the paper.
+
+Figures 5–8, 11–13, 15, 17–19, and 24, 27–29 below are cropped from Reiner
+Thomä et al., [“Distributed multisensor ISAC,” *npj Wireless Technology* 2,
+22 (2026)](https://doi.org/10.1038/s44459-026-00041-2), under the
+[CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/). The source
+figure numbers are retained in each caption; the surrounding descriptions are
+summaries.
 
 ## 1. Executive summary
 
@@ -89,6 +96,10 @@ flowchart LR
     F -. CSI, schedule and\nmission feedback .-> T
 ```
 
+![Source paper Fig. 5: distributed MS-ISAC architecture with monostatic and bistatic links](images/fig-05-distributed-architecture.png)
+
+*Source: Fig. 5, cropped from Thomä et al. (2026).*
+
 ### Cooperation layers
 
 - **SLC:** Each Tx/Rx pair synchronizes, reconstructs the reference, estimates
@@ -135,6 +146,10 @@ H_{m,n} = H_{\mathrm{LOS}}
 - A blocked direct path does not necessarily mean the target is unobservable:
   target-related multipath, spatial diversity, and known environmental
   reflections can provide alternative constraints.
+
+![Source paper Fig. 6: bistatic line-of-sight, target, and clutter paths](images/fig-06-multipath-geometry.png)
+
+*Source: Fig. 6, cropped from Thomä et al. (2026).*
 
 For simulation, represent a link as a sum of \(P\) specular components:
 
@@ -216,6 +231,10 @@ a different projection of target velocity. Three-dimensional velocity therefore
 requires enough independent Doppler geometries; more links help resolve
 ambiguities and reduce variance.
 
+![Source paper Fig. 7: bistatic eToF ellipsoids and target velocity geometry](images/fig-07-bistatic-ellipsoids.png)
+
+*Source: Fig. 7, cropped from Thomä et al. (2026).*
+
 For noisy or redundant range observations, solve a nonlinear weighted least
 squares problem over position, or linearize around the previous verified
 position and use a pseudoinverse for a local update. The paper emphasizes
@@ -242,6 +261,10 @@ best near either radio node, moderate between them, and poor when far from
 both. Distributed nodes trade site density and node placement for coverage,
 diversity, and favorable GDoP.
 
+![Source paper Fig. 8: shallow versus well-conditioned ellipse intersections](images/fig-08-gdop.png)
+
+*Source: Fig. 8, cropped from Thomä et al. (2026).*
+
 ## 4. Radio access and resource allocation
 
 The communication network provides the time/frequency/spatial access toolbox,
@@ -255,6 +278,10 @@ independent user links.
 | TDMA | Separates links in time; straightforward orthogonal access. | Reduces per-link slow-time sampling and can reduce unambiguous Doppler range. |
 | Joint transmission (JT) | Multiple transmitters illuminate together; potentially more target energy and spatial diversity. | Extended-target returns may be noncoherent; without waveform separation, individual bistatic geometries can be lost. |
 | Spatial/polarimetric access | Raises SNR, suppresses clutter, adds directional/polarimetric observables. | Beam search, calibration, hardware constraints, and additional resource cost. |
+
+![Source paper Fig. 11: two transmitters sharing OFDM resources for different target-motion geometries](images/fig-11-orthogonal-access.png)
+
+*Source: Fig. 11, cropped from Thomä et al. (2026).*
 
 Resource allocation must consider below items:
 
@@ -272,10 +299,18 @@ estimators that honor the actual sample times. Averaging adjacent OFDM symbols
 can improve SNR; coherent processing across a longer interval improves Doppler
 resolution but is limited by phase stability and target range migration.
 
+![Source paper Fig. 12: uniform and nonuniform TDMA resource-block allocation](images/fig-12-tdma-resource-grid.png)
+
+*Source: Fig. 12, cropped from Thomä et al. (2026).*
+
 **FDMA details:** compact contiguous allocation yields conventional range
 resolution. At fixed total bandwidth, fragmented allocation may increase
 effective frequency spread but causes sidelobes/grating lobes, so the FFT of
 zero-filled samples is not a reliable general estimator.
+
+![Source paper Fig. 13: compact and fragmented FDMA resource allocation](images/fig-13-fdma-resource-grid.png)
+
+*Source: Fig. 13, cropped from Thomä et al. (2026).*
 
 **CRB-driven scheduling:** for model parameters
 \(\boldsymbol\theta=[\tau_p,\alpha_p,\gamma_p]\), parameter variance is bounded
@@ -414,6 +449,10 @@ flowchart TD
     K --> L[Multilink\nassociation\nand\nstate fusion]
 ```
 
+![Source paper Fig. 15: OFDM receiver processing through delay-Doppler estimation](images/fig-15-ofdm-processing.png)
+
+*Source: Fig. 15, cropped from Thomä et al. (2026).*
+
 ### 5.2 Turbo-CPCL processing algorithm
 
 1. **Synchronize and demodulate:** use network timing/carrier synchronization;
@@ -477,6 +516,18 @@ response according to the propagation model and can separate overlapping
 components more effectively than magnitude-domain CLEAN. Model order \(P\)
 must be selected or estimated; the article does not prescribe one universal
 order-selection rule. Recursive estimation is suggested for real-time operation.
+
+![Source paper Fig. 17: delay-Doppler distortion from a sparsely occupied resource grid](images/fig-17-sparse-delay-doppler.png)
+
+*Source: Fig. 17, cropped from Thomä et al. (2026).*
+
+![Source paper Fig. 18: sparse active resource blocks in the frequency-time aperture](images/fig-18-sparse-resource-sampling.png)
+
+*Source: Fig. 18, cropped from Thomä et al. (2026).*
+
+![Source paper Fig. 19: channel samples and gaps caused by sparse resource allocation](images/fig-19-sparse-channel-sampling.png)
+
+*Source: Fig. 19, cropped from Thomä et al. (2026).*
 
 For improved estimates:
 
@@ -707,6 +758,22 @@ The article's demonstration is a **measurement**, not a simulation data set:
   sensor placement yielded high GDoP. This is a useful negative lesson:
   detecting a target on multiple links does not ensure a well-conditioned
   position estimate.
+
+![Source paper Fig. 24: the three-node dual-link measurement setup](images/fig-24-measurement-setup.png)
+
+*Source: Fig. 24, cropped from Thomä et al. (2026).*
+
+![Source paper Fig. 27: measured delay-Doppler result at receiver 1](images/fig-27-rx1-delay-doppler.png)
+
+*Source: Fig. 27, cropped from Thomä et al. (2026).*
+
+![Source paper Fig. 28: measured delay-Doppler result at receiver 2](images/fig-28-rx2-delay-doppler.png)
+
+*Source: Fig. 28, cropped from Thomä et al. (2026).*
+
+![Source paper Fig. 29: eToF ellipse intersection for the measured target](images/fig-29-measured-target-ellipses.png)
+
+*Source: Fig. 29, cropped from Thomä et al. (2026).*
 
 The authors state that the data set and code are not publicly available; the
 example is therefore a qualitative reference point, not a directly
