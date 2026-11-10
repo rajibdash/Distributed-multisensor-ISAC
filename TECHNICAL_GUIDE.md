@@ -5,14 +5,6 @@ principles, and measurement example in the source paper into a simulation-first
 reference. It emphasizes relationships and implementation steps rather than
 reproducing the paper's figures.
 
-> **Source:** R. Thomä et al., “Distributed multisensor ISAC,” *npj Wireless
-> Technology*, 2, 22 (2026). [https://doi.org/10.1038/s44459-026-00041-2](https://doi.org/10.1038/s44459-026-00041-2).
-> The paper is open access under CC BY 4.0. The diagrams below are original
-> conceptual redrawings; equations and numerical results are attributed to the
-> paper. The article reports concepts and one measurement example, not a
-> reproducible simulation package; proposed simulation steps are identified as
-> implementation guidance.
-
 ## 1. Executive summary
 
 Integrated sensing and communications (ISAC) reuses a mobile communications
@@ -23,7 +15,7 @@ radio nodes as a cooperative multistatic radar network. Its sensing links jointl
 illuminate and observe a target; delay, Doppler, and optionally direction
 measurements from several geometries are fused into a 3D target state.
 
-The paper's central engineering ideas are:
+What are central engineering ideas here briefly:
 
 1. Coordinate multiple transmit/receive links and their time-frequency
    resources, rather than treating each sensing link as an isolated radar.
