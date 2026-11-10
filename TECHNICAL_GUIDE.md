@@ -309,6 +309,65 @@ tracking with predictive link/resource adaptation. AI may help with this
 nonconvex multi-objective scheduling problem, but is a proposed direction, not a
 specified algorithm or trained model in the article.
 
+### Example PRB policy: one downlink gNB and multiple receive-only sensors
+
+Assume one gNB illuminates the scene in downlink and \(M\) spatially separated,
+receive-only sensors listen to it. This is the paper's **broadcast** access
+case: every sensor can observe the same gNB transmission at the same time.
+Therefore, do **not** divide the gNB's PRBs by \(M\). The sensors produce
+different bistatic measurements from their different locations; a sensor with
+poor geometry or echo SNR may contribute little, but giving it a separate PRB
+does not fix that by itself. This plan does not cover sensors that also transmit;
+multiple active illuminators need coordinated orthogonal access or a designed
+joint-transmission scheme.
+
+Use the following as an initial scheduler policy, not as a PRB percentage
+specified by the paper. Let \(B\) be the downlink PRB-symbol budget available
+for PDSCH after mandatory control, reference-signal, and guard overhead. Count
+resource in PRB-symbols so that frequency and time allocations are comparable.
+
+| Sensing cycle | gNB scheduler action | Incremental downlink cost |
+|---|---|---|
+| Surveillance / acquisition | Schedule ordinary PDSCH for communication and let all sensors observe eligible payload REs using CPCL/reference reconstruction. Do not reserve sensing-only PRBs initially. | No sensing-only PDSCH reservation; actual sensing still requires receiver processing and measurement reporting. |
+| Target refinement | If measured detection/CRB targets are missed, start with a sensing-only allocation of \(0.05B\), selected from otherwise schedulable data resources. Use known/PRS-like illumination where supported; choose frequency edges for delay precision and suitable repeated time samples for Doppler. | About 5% fewer PRB-symbols remain for PDSCH than in the no-reservation baseline, if this resource would otherwise carry data. |
+| Tracking | Recompute the sensing need from the current CSI/KPI, target motion, and geometry each scheduling window. Keep the reservation at 0% when shared payload meets the requirement; otherwise adjust it in 5-point steps, initially testing no more than \(0.10B\). | Data capacity falls only for the fraction made exclusive to sensing; the 10% value is an experiment cap, not a universal optimum. |
+
+For example, with \(B=100\) normalized schedulable PRB-symbol units, a 5-unit
+refinement reservation leaves at most 95 units for PDSCH; the other 95 can
+still serve both communication and sensing when their payload is usable as a
+sensing reference. This is a resource-budget illustration, not a prediction
+that throughput falls by exactly 5%: actual goodput depends on MCS, traffic
+demand, retransmissions, and the particular NR overhead and scheduling
+configuration. If the sensing-only reservation takes resources that would
+otherwise be idle, its immediate user-throughput cost may be zero.
+
+At each update, the scheduler should:
+
+1. Form a candidate set of sensor links using geometry/GDoP, echo SNR, and
+   target visibility; all selected receive-only sensors may listen to the same
+   transmission.
+2. First use eligible communication payload REs. Add exclusive sensing REs
+   only when the required detection probability, delay/Doppler CRB, or track
+   continuity is not met, while enforcing the communication rate/latency
+   floor.
+3. Allocate compact frequency bands when using conventional FFT processing;
+   if resources are fragmented or sparse, pass the actual RE mask to a
+   sparse/model-based estimator rather than treating missing REs as measured
+   zeros. Prioritize frequency edges for demanding delay precision and
+   adequate slow-time repetition for demanding Doppler precision.
+4. Include uplink measurement reports and fusion transport in the capacity
+   budget separately; these consume resources even though the receive-only
+   sensors do not each need a separate downlink PRB allocation.
+
+This operational example applies the paper's broadcast access, payload reuse,
+adaptive sensing cycles, and CRB-guided scheduling principles. The paper does
+not prescribe the 5% starting point or 10% test cap; those are explicit,
+adjustable starting assumptions for a scheduler simulation and should be
+swept against both sensing KPIs and communication goodput. See Thomä et al.,
+[“Distributed multisensor ISAC”](https://doi.org/10.1038/s44459-026-00041-2),
+especially the MS radio access discussion (pp. 11–13) and resource scheduling
+(pp. 18–19).
+
 ```mermaid
 flowchart LR
     A[Surveillance and acquisition] --> B[Coarse target hypotheses]
