@@ -56,7 +56,7 @@ forward/backward links can provide up to \(N^2\) independent measurements.
 Extra links provide diversity, redundancy, outlier checks, and additional
 geometric constraints.
 
-### Three deployment patterns, need to be expanded more!
+### Three deployment patterns
 
 1. **Infrastructure-only:** Fixed gNB/RRU illuminators and receive-only
    “sniffer” nodes report to a centralized/cloud radio pool. It is suitable for
@@ -74,6 +74,28 @@ geometric constraints.
    and illuminators. The mesh can be network controlled or ad hoc, and may
    distribute sensing, computation, and communications tasks under payload,
    energy, and link-capacity constraints.
+
+These three patterns describe **which nodes participate and their roles**; they
+do not specify the coordination boundary, number of transmission/reception
+points (TRPs), cell grouping, duplex mode, or OFDM numerology. Those are
+complementary design dimensions and can be combined with any of the patterns
+above:
+
+| Dimension | Cases to consider | Sensing and coordination implications |
+|---|---|---|
+| **Coordination scope** | **Intra-gNB** or **inter-gNB** | Intra-gNB operation can coordinate multiple distributed RUs/TRPs under one gNB; it is not necessarily collocated or monostatic. Inter-gNB operation crosses gNB control domains and therefore needs explicit timing/resource coordination, measurement association, and an exchange path for measurements or estimates. The required phase coherence depends on whether processing is coherent across links or fuses per-link measurements. |
+| **Tx/Rx topology** | Single-TRP or **mTRP** (multiple TRPs) | mTRP can provide multiple illuminators, receivers, or both, and can be intra-gNB or inter-gNB. It does not by itself imply coherent joint transmission: the design must state which TRPs transmit/receive, how their links are scheduled, and whether fusion is waveform-, measurement-, or track-level. |
+| **Cell grouping** | Per-cell operation or a coordinated **“combined cell”** view | A combined-cell view can describe TRPs/cells treated as one sensing domain for coordination and fusion. Use it as a logical deployment description here, not as an assumption that the cells share one physical site, cell identity, gNB, or standardized combined-cell procedure. State the actual gNB/TRP and coordination boundaries. |
+| **Duplexing** | TDD, FDD, or mixed FDD/TDD across participating links or cells | TDD and FDD change when and on which frequencies each endpoint can transmit or receive. A mixed deployment must account for band separation, RF isolation, UL/DL availability, scheduling, and Tx/Rx synchronization; do not assume that links can directly share the same reference or resources. |
+| **Numerology** | Common or mixed numerologies | Numerology (for example, subcarrier spacing, cyclic prefix, and the resulting symbol/slot timing) is distinct from duplexing. Across numerologies, align each link to its own resource grid and account for timing and inter-numerology interference when scheduling or combining measurements. |
+
+In particular, **FDD+TDD is a mixed-duplexing case, not by itself an
+inter-numerology case**. A network may have mixed duplex modes with a common
+numerology, mixed numerologies within one duplex mode, or both. For CPCL or
+other coherent processing, identify the actual transmitted waveform and
+reference per link; otherwise, combine calibrated per-link measurements or
+tracks at the appropriate coordination layer rather than assuming network-wide
+waveform/phase coherence.
 
 ```mermaid
 flowchart LR
