@@ -56,13 +56,13 @@ forward/backward links can provide up to \(N^2\) independent measurements.
 Extra links provide diversity, redundancy, outlier checks, and additional
 geometric constraints.
 
-### Three deployment patterns
+### Three deployment patterns, need to be expanded more!
 
-1. **Infrastructure-only:** fixed gNB/RRU illuminators and receive-only
+1. **Infrastructure-only:** Fixed gNB/RRU illuminators and receive-only
    “sniffer” nodes report to a centralized/cloud radio pool. It is suitable for
    persistent surveillance of roads, ports, rail yards, utilities, campuses, and
    other critical infrastructure. It avoids putting a UE in the sensing loop.
-2. **UE-assisted UL/DL:** a UE may be a sensor or illuminator, with the
+2. **UE-assisted UL/DL:** A UE may be a sensor or illuminator, with the
    infrastructure as its complementary endpoint. DL naturally supports
    broadcast illumination to multiple listening UEs; UL transmissions from
    spatially separated UEs naturally provide multiple bistatic measurements.
@@ -70,7 +70,7 @@ geometric constraints.
    of the sensing problem. A receive-only sniffer can use a reduced CPCL mode;
    an authorized UE additionally enables feedback, fusion, and adaptive
    transmission.
-3. **Sidelink mesh:** cars, drones, or other mobile nodes act as both sensors
+3. **Sidelink mesh:** Cars, drones, or other mobile nodes act as both sensors
    and illuminators. The mesh can be network controlled or ad hoc, and may
    distribute sensing, computation, and communications tasks under payload,
    energy, and link-capacity constraints.
@@ -91,11 +91,11 @@ flowchart LR
 
 ### Cooperation layers
 
-- **SLC:** each Tx/Rx pair synchronizes, reconstructs the reference, estimates
+- **SLC:** Each Tx/Rx pair synchronizes, reconstructs the reference, estimates
   paths and produces local delay/Doppler/direction measurements.
-- **IntraSC:** a site or mobile cloud coordinates links and resources, aligns
+- **IntraSC:** A site or mobile cloud coordinates links and resources, aligns
   measurements in time, associates targets, and fuses local measurements.
-- **InterSC:** sites exchange target states/trajectories and create a wider
+- **InterSC:** Sites exchange target states/trajectories and create a wider
   situation picture. This layer can combine ISAC with other sensors and
   operator information; raw waveform-level coherence is not generally needed.
 
@@ -256,14 +256,14 @@ independent user links.
 | Joint transmission (JT) | Multiple transmitters illuminate together; potentially more target energy and spatial diversity. | Extended-target returns may be noncoherent; without waveform separation, individual bistatic geometries can be lost. |
 | Spatial/polarimetric access | Raises SNR, suppresses clutter, adds directional/polarimetric observables. | Beam search, calibration, hardware constraints, and additional resource cost. |
 
-Resource allocation must consider:
+Resource allocation must consider below items:
 
-- sensing SNR/detection probability and false alarm/missed detection rates;
-- delay, Doppler, angle resolution and coherent integration duration;
-- target and sensor geometry, GDoP, target motion, and range migration;
-- frequency-time sparsity, multipath selectivity, waveform/CSI quality;
-- communication throughput, latency, reliability, and fairness;
-- transport and computation cost/latency for fusion.
+- Sensing SINR/detection probability and false alarm/missed detection rates.
+- Delay, Doppler, angle resolution and coherent integration duration.
+- Target and sensor geometry, GDoP, target motion, and range migration.
+- Frequency-time sparsity, multipath selectivity, waveform/CSI quality.
+- Communication throughput, latency, reliability, and fairness.
+- Transport and computation cost/latency for sensors fusion.
 
 **TDMA details:** uniform interleaving maintains the slow-time sample rate for
 each link. Sharing slots lowers that rate and hence the unambiguous Doppler
