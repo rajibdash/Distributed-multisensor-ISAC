@@ -1,16 +1,9 @@
 # Distributed Multisensor ISAC: Technical and Simulation Guide
 
-This guide consolidates the system model, estimation methods, coordination
-principles, and measurement example in the source paper into a simulation-first
-reference. It combines implementation-oriented explanations with selected
-figures reproduced from the paper.
-
-Figures 5–8, 11–13, 15, 17–19, and 24, 27–29 below are cropped from Reiner
-Thomä et al., [“Distributed multisensor ISAC,” *npj Wireless Technology* 2,
-22 (2026)](https://doi.org/10.1038/s44459-026-00041-2), under the
-[CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/). The source
-figure numbers are retained in each caption; the surrounding descriptions are
-summaries.
+This technical guide consolidates the system model, estimation methods, coordination
+principles, usecases and measurement example in the source paper into a simulation first
+reference. It combines implementation oriented explanations with selected figures 
+reproduced from the reserach paper.
 
 ## 1. Executive summary
 
@@ -18,8 +11,8 @@ Integrated sensing and communications (ISAC) reuses a mobile communications
 network's transmitters, receivers, spectrum, OFDM waveform, synchronization,
 computing, and data transport to detect and track objects that do not carry a
 radio tag. **Distributed multisensor ISAC (MS-ISAC)** treats spatially separated
-radio nodes as a cooperative multistatic radar network. Its sensing links jointly
-illuminate and observe a target; delay, Doppler, and optionally direction
+radio nodes as a cooperative multistatic radar network. It's sensing links jointly
+illuminate and observe a target there by delay, Doppler, and optionally direction
 measurements from several geometries are fused into a 3D target state.
 
 What are central engineering ideas here briefly:
