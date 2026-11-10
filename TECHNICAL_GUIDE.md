@@ -82,7 +82,7 @@ flowchart LR
     X -->|bistatic echo| R2[Rx / sniffer 2]
     T -->|direct LOS\nreference| R1
     T -->|direct LOS\nreference| R2
-    R1 --> S[Local sensing\nand\ndelay-Doppler estimates]
+    R1 --> S[Local sensing\nand\ndelay-Doppler\nestimates]
     R2 --> S
     S --> F[Site / cloud\nfusion and tracking]
     F --> U[Authorized\napplication\nor operator view]
