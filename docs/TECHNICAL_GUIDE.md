@@ -1392,3 +1392,5 @@ do not assume that one paper covers all constraints in the proposed model.
   Use its applicable deployment profiles as propagation baselines; it is not
   an ISAC object-classification specification or a substitute for
   site-specific clutter and sensing models.
+
+**Author:** Rajib Dash
