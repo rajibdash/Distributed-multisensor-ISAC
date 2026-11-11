@@ -659,6 +659,59 @@ Multiple translated subarrays can extend this to multiple arrivals, provided
 patterns and phase relationships are calibrated. For DoD, transmit waveforms
 must be distinguishable, usually through orthogonal time-frequency resources.
 
+### 6.4 Environment-adaptive PHY for unknown objects
+
+The PHY should preserve observations that do not match a known object, map
+feature, or learned signature. An unexplained return is initially an
+**unclassified measurement**, not automatically an object: it may be clutter,
+a multipath ghost, or a new object. Conversely, a known-object classifier or
+map must not suppress a geometrically and temporally plausible unknown.
+Separate three uncertainties in reports: whether a return is real, whether it
+belongs to an object, and the object's class.
+
+Recommended PHY and receiver behavior:
+
+- Keep a broad-coverage surveillance mode using communication payload
+  references or reconstructable signals. If payload recovery or its
+  time-frequency coverage is inadequate, add or reschedule known sensing
+  reference bursts, with transmitter identity and resource mapping available
+  to the receivers; this is a PHY/scheduler change, not a free sensing gain.
+  When confirmation is needed, adapt the sensing cycle with more usable
+  bandwidth for delay separation, a longer coherent interval for Doppler only
+  when motion and phase stability permit, and narrower or additional beams
+  for angular separation. Measure the loss in communication resources and
+  service quality for each refinement.
+- Preserve the actual time-frequency mask and per-RE confidence. Use
+  distinguishable transmissions or scheduled orthogonal resources when
+  multiple illuminators share a receiver; otherwise association to a Tx/Rx
+  geometry can be ambiguous. Retain the LOS/reference path, calibrated beam
+  patterns, sensor pose, and timing/frequency uncertainty with each report.
+- Run detection against local range-Doppler-angle clutter statistics and
+  receiver dynamic-range limits, not a single threshold for every site. Keep
+  an adaptive background model, but protect candidate and confirmed tracks
+  from being learned away; stationary unknown objects can disappear under
+  naive background subtraction. A single high-power return is not enough to
+  identify a target or to update the background.
+- Use multiple links, frequencies, beams, or polarization where available to
+  test whether a return is consistent with one object under different
+  aspects. Treat multipath explanations as competing hypotheses, not as
+  extra objects or certain virtual anchors. Maps may help rank hypotheses,
+  but should be soft priors rather than hard gates on unknown detections.
+
+The following are proposed environment profiles for evaluation, not a claim
+that one waveform or threshold is optimal. Use standardized channel profiles
+where applicable (for example, 3GPP TR 38.901 [S5]); tunnels, parking
+structures, and site-specific machinery or clutter generally need explicit
+additional modeling.
+
+| Environment | Important sensing conditions | PHY / receiver emphasis |
+|---|---|---|
+| Indoor office | Short paths, strong wall/furniture reflections, people and moving equipment; returns can overlap in delay. | Use bandwidth and spatial diversity to separate nearby paths; retain room-specific clutter statistics and test moving and stationary unknown objects. |
+| Industrial factory | Metallic specular clutter, machinery and periodic motion, occlusion, and potentially strong direct-path leakage. | Calibrate array/beam response and receiver headroom; distinguish machinery clutter in range-Doppler-angle rather than globally notching its Doppler; test machinery-on/off and changing layouts. |
+| Urban street / canyon | Blocked LOS, building reflections, traffic and pedestrian clutter, and changing visibility across links. | Use spatially separated links and beam/frequency diversity; retain NLoS path hypotheses and down-weight map mismatches instead of rejecting unmapped candidates. |
+| Rural / open area | Longer paths, weak or aspect-dependent target echoes, vegetation clutter, and fewer useful reflectors. | Evaluate detection at low echo SNR, use additional dwell or links only within motion/coherence limits, and report coverage gaps rather than treating missing detections as absence. |
+| Tunnel / parking structure | Repeated reflections, persistent clutter, occlusion, and constrained sensor geometry. | Use multiple baselines where possible; model persistent multipath and geometry uncertainty; test whether the same candidate remains observable when one path or sensor is blocked. |
+
 ## 7. Data fusion and tracking
 
 At each link, local processing yields delay, Doppler, direction, confidence,
@@ -683,6 +736,19 @@ and a basis for predictive resource allocation. Early/raw fusion preserves
 information but increases transport/computation demands; late fusion of local
 estimates is more modular and can reduce shared data. Keep uncertainty and
 measurement age attached to all reports.
+
+For unidentified-object handling, keep **track existence** separate from
+**class identity**. Start tentative, unclassified tracks from consistent
+measurements across time or independent links; confirm, coast, merge, or
+terminate them using declared evidence and uncertainty rules. Preserve
+unclassified tracks and their confidence instead of forcing the nearest known
+class. Require path- and geometry-aware association so one object's
+multilink/multipath returns do not become duplicate tracks, while allowing
+alternative path hypotheses until evidence resolves them. Do not silently
+discard stationary candidates through background adaptation. If a class is
+later assigned, retain the prior unknown status and the evidence/confidence
+that changed it; radar delay/Doppler/angle alone does not guarantee semantic
+identity.
 
 ```mermaid
 flowchart LR
@@ -836,6 +902,7 @@ outliers, then report covariance/CRB or empirical uncertainty.
 | Motion | stationary target, radial/tangential motion, sensor motion, range migration. |
 | Coordination | broadcast, orthogonal links, JT, adaptive sensing cycles. |
 | Precoding | none, beamforming, background subtraction, channel-matched TRF with channel aging. |
+| Environment / object knowledge | indoor office, factory, urban canyon, rural/open, and tunnel/parking; known classes vs held-out/unclassified objects; mapped vs unmapped scenes; stationary vs moving candidates. |
 
 Report probability of detection versus false alarm, delay/Doppler RMSE, 3D
 position and velocity RMSE, track continuity/false tracks, GDoP, CRB, SNR,
@@ -843,7 +910,12 @@ resource utilization, communication throughput/latency, and fusion delay.
 Sweep SNR and repeat independent target/channel realizations; separate
 algorithmic error from geometry and synchronization error. Include confidence
 intervals rather than a single realization. Compare estimated covariance with
-empirical error to detect model mismatch.
+empirical error to detect model mismatch. For held-out object classes, also
+report unknown-object recall and correct unknown rejection at a declared false
+alarm rate, track-initiation latency, unknown-track continuity, false-track
+and duplicate-track rates, and the rate at which background adaptation erases
+stationary candidates. Stratify results by environment and echo strength;
+otherwise a pooled score can hide a PHY or tracker failure in one scene.
 
 ### 8.5 Published measurement example (reference check)
 
@@ -954,6 +1026,9 @@ when comparing a single-node baseline with collaborative multisensor DISAC.
   SNR, and timing; surplus links are useful for robustness if transport allows.
 - **Do not extend coherent integration without checking phase coherence and
   range migration.**
+- **Do not equate an unknown class with clutter or absence:** retain
+  unclassified candidates with confidence and provenance, and test background
+  subtraction against stationary objects.
 - **Do not expect fully coherent joint transmission from an extended,
   statistically varying target; noncoherent illumination may be the realistic
   diversity/energy objective.**
@@ -1311,3 +1386,9 @@ do not assume that one paper covers all constraints in the proposed model.
   <https://arxiv.org/abs/2604.26552>. Studies cooperative fusion and joint
   RE/power allocation with per-BS budgets, communication requirements,
   and delay-Doppler ambiguity-sidelobe constraints.
+- **[S5]** 3GPP TR 38.901 V19.1.0, "Study on channel model for frequencies
+  from 0.5 to 100 GHz":
+  <https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/19.01.00_60/tr_138901v190100p.pdf>.
+  Use its applicable deployment profiles as propagation baselines; it is not
+  an ISAC object-classification specification or a substitute for
+  site-specific clutter and sensing models.
