@@ -1,9 +1,9 @@
 # Distributed Multisensor ISAC: Technical and Simulation Guide
 
 This technical guide consolidates the system model, estimation methods, coordination
-principles, usecases and measurement example in the source paper into a simulation first
-reference. It combines implementation oriented explanations with selected figures 
-reproduced from the reserach paper.
+principles, use cases, and measurement example in the source paper into a simulation-first
+reference. It combines implementation-oriented explanations with selected figures
+reproduced from the research paper.
 
 ## 0. Objective
 
@@ -26,20 +26,21 @@ use cases, requirements, and design an innovative network architecture. They wil
 layer waveforms, distributed sensing and communications methods, optimised resource allocation methods, and 
 protocols. Several demonstrations will validate the key 6G-DISAC concepts. 
 
-This project will revolutionise various applications, from extended reality and robot human interaction to 
-vehicular safety functions and **improving communication key performance indicators with sensing aided 
-communications**.
+The project aims to investigate potential applications ranging from extended reality
+and human-robot interaction to vehicular safety, including whether sensing-aided
+communications can improve communication key performance indicators. These are
+project goals, not demonstrated outcomes or guaranteed performance.
 
 ## 1. Executive summary
 
 Integrated sensing and communications (ISAC) reuses a mobile communications
-network's transmitters, receivers, spectrum, OFDM waveform, synchronization,
-computing, and data transport to detect and track objects(localizing of passive 
-objects) that do not carry a radio tag. **Distributed multisensor ISAC (MS-ISAC)** 
-treats spatially separated radio nodes as a cooperative multistatic radar network. 
-It's sensing links jointly illuminate and observe a target there by delay, Doppler, 
-and optionally direction measurements from several geometries are fused into a 3D 
-target state.
+network's transmitters, receivers, spectrum, waveforms, synchronization,
+computing, and data transport to detect and track objects that do not carry a
+radio tag. **Distributed multisensor ISAC (MS-ISAC)** treats spatially separated
+radio nodes as a cooperative multistatic radar network. Its sensing links jointly
+illuminate and observe a target; delay, Doppler, and optionally direction
+measurements from several geometries can be fused into a 3D target state when
+the measurements make that state observable.
 
 So, RAN Advanced ISAC networks will rely on distributed infrastructure, multisensor uplink and 
 downlink, or meshed sidelink access. In this way, ISAC develops into a MS-MIMO (multisensor 
@@ -245,8 +246,12 @@ An absolute bistatic ToF measurement defines an ellipsoid with foci at Tx and
 Rx. An eToF measurement defines the same family after adding the known direct
 baseline. In 2D the surface is an ellipse; in 3D it is an ellipsoid. At least
 three geometrically informative links are needed for a 3D position in the
-basic range-only formulation. Additional measurements improve robustness
-and expose outliers, but uniqueness and accuracy depend on geometry.
+basic range-only formulation, but three measurements do not guarantee a unique
+solution: several intersections can satisfy the same ranges. Additional
+independent measurements or prior information may be needed to disambiguate
+solutions. More measurements improve robustness and expose outliers only when
+their uncertainties and correlations are handled; uniqueness and accuracy still
+depend on geometry.
 
 ```text
                          target p
@@ -712,6 +717,60 @@ Define a configuration with:
 Use SI units consistently. Keep **absolute path delay**, **excess delay**, and
 **Doppler sign convention** explicit in code and result files.
 
+#### Synthetic starter scenario (proposed, not a paper reproduction)
+
+The following small deterministic scenario makes it possible to test link
+generation, delay-Doppler estimation, and 2D fusion before adding a detailed
+radio or target model. Its coordinates and noise settings are illustrative;
+they are not reported by the measurement paper.
+
+| Item | Starter value |
+|---|---|
+| Coordinate frame | Local 2D Cartesian frame, metres; all radio nodes stationary. |
+| Transmitters | Tx1 \((-50,-20)\), Tx2 \((60,-40)\). |
+| Receivers | Rx1 \((-40,80)\), Rx2 \((70,90)\); use the four Tx-to-Rx links. |
+| Target truth | Initial position \((10,30)\) m and constant velocity \((3,-2)\) m/s. |
+| Frequency-time samples | Abstract channel-sounding grid, \(f_c=5.2\) GHz, \(B=80\) MHz, \(N_f=256\) uniformly spaced frequency samples, and 50 snapshots at 1 ms intervals. This is not a standards-compliant NR configuration. |
+| Observation/mask | 50 ms observation; start with all frequency-time samples present, then test fixed seeded masks at 75%, 50%, and 25% occupancy. Preserve the actual \(f_k,t_m\) coordinates for every observed sample. |
+| Noise and target strength | Complex AWGN with \(E[|n|^2]=1\). Set each link's target echo SNR relative to this noise and sweep \(-10,-5,0,5,10\) dB; this normalized SNR is not a physical link budget. |
+| Reference and impairments | Begin with a known reference, no clock error, and a single target path plus LOS. Add clutter, reference-recovery error, clock/LO offsets, phase noise, and blockage one at a time. |
+
+For link \(i=(\mathrm{Tx}_a,\mathrm{Rx}_b)\), compute the direct length
+\(L_{0,i}\) and target path length \(L_i(\mathbf p(t_m))\) from section 3.3.
+One simple complex channel sample is
+
+\[
+H_i(f_k,t_m)=
+\gamma_{0,i}e^{-j2\pi f_k L_{0,i}/c}
++\gamma_{1,i}e^{-j2\pi f_k L_i(\mathbf p(t_m))/c}
++C_i(f_k,t_m)+n_i(f_k,t_m),
+\]
+
+where \(C_i\) is zero in the first run, \(\gamma_{0,i}\) is the direct-path
+coefficient, and \(\gamma_{1,i}\) is scaled to the selected target SNR. The
+time-varying target path phase produces the bistatic Doppler; derive its sign
+from the convention in section 3.3 instead of inserting a monostatic
+velocity-to-Doppler conversion. Fit the LOS and target components using their
+complex samples, then solve for position/velocity from the four link
+measurements.
+
+For this grid, \(1/B=12.5\) ns is a nominal delay-resolution scale, not a
+guaranteed estimation error; \(c/B=3.75\) m is the corresponding path-sum
+scale, not a one-way bistatic range resolution. Uniform 1 ms snapshot spacing
+gives a nominal centered unambiguous Doppler interval of about \(\pm500\) Hz,
+and a 50 ms aperture gives about 20 Hz nominal Doppler resolution. These
+relationships are first-order checks, not substitutes for estimating the
+actual ambiguity function or testing estimator bias.
+
+For every run, save the configuration, random seed, truth states, observed
+resource mask and sample coordinates, per-link estimates/covariances, detection
+decisions, and fusion epoch. Report \(P_D\) at a declared \(P_{FA}\), eToF and
+eDoppler RMSE conditional on detection, 2D position/velocity RMSE, false
+tracks, and runtime. Add target-free trials to measure false alarms, and report
+trial counts and confidence intervals. Only after this ideal-reference case
+works should the simulator add waveform reconstruction, physical link budgets,
+array responses, synchronization errors, and transport latency.
+
 ### 8.2 End-to-end algorithm
 
 ```text
@@ -827,37 +886,42 @@ The authors state that the data set and code are not publicly available; the
 example is therefore a qualitative reference point, not a directly
 reproducible benchmark.
 
-### 8.6 Source-paper metrics and KPI targets (Not Satisfied with the update, need to revisit details from paper!)
+### 8.6 Source-paper metrics and KPI targets
 
-The 6G-DISAC paper frames its metrics around PHY-layer and system performance:
+The 2024 6G-DISAC approach paper
+(Calvanese Strinati et al., [DOI: 10.1109/EuCNC/6GSummit60053.2024.10597016](https://doi.org/10.1109/EuCNC/6GSummit60053.2024.10597016),
+also included in `references/6G-DISAC_Approach.pdf`) frames its metrics around
+PHY-layer and system performance:
 waveform shaping, hardware compliance, and new signal- and semantic-processing
 techniques. It calls out the communication-versus-sensing resource-allocation
 trade-off as essential to determining whether use-case KPIs are met. Evaluation
 must extend beyond the usual single-sensing-receive-node metrics to collaborative
 sensing with multiple nodes. The paper says the framework will be evaluated
-through **seven** distinct Quantitative Targets (QTs), but the Metrics and KPIs
-section enumerates only **six** (QT1–QT6); it gives no QT7, so none is inferred
-here.
+through **seven** distinct Quantitative Targets (QTs), but the metrics and KPIs
+paragraphs enumerate only **six** (QT1–QT6); the source provides no description
+or value for QT7. This is an inconsistency in the source, not a missing value
+that can safely be reconstructed, so no QT7 is inferred here.
 
 | Target | Metric and baseline/reference stated in the paper | 6G-DISAC target | Rationale or enabling approach stated in the paper |
 |---|---|---|---|
 | **QT1: Spectral efficiency** | Relative comparison with current 3GPP Release 18 MIMO benchmarks. | **30% relative improvement**; no frequency range is specified. | Sensing-aided communications are expected to refine MIMO channel-matrix and geometric-channel-parameter estimates, improving spectral efficiency. |
-| **QT2: User positioning accuracy** | The paper says the current baseline is undefined. | Absolute accuracy of **0.01 m in FR2** and **0.1 m in FR1**. | Combine positioning and sensing, using large bandwidths and apertures. |
-| **QT3: Energy efficiency** | The paper says it compares with standards outlined in **3GPP TR 38.684**. | **40% improvement in FR2**. | As for QT1, sensing-aided communication is expected to improve geometric-channel-parameter estimation and thereby energy efficiency. |
+| **QT2: User positioning accuracy** | The paper says the current baseline is undefined; it does not define the error statistic or test conditions. | **0.01 m in FR2** and **0.1 m in FR1**. | Combine positioning and sensing, using large bandwidths and apertures. |
+| **QT3: Energy efficiency** | The paper cites **3GPP TR 38.684**, but this reference is unverified as printed (see below). | **40% improvement in FR2**. | As for QT1, sensing-aided communication is expected to improve geometric-channel-parameter estimation and thereby energy efficiency. |
 | **QT4: User orientation accuracy** | Current baseline stated as **1°–5°**. | **Less than 1° in FR2**. | UE-side antenna arrays and numerous base stations (BSs) or access points. |
 | **QT5: Object positioning accuracy** | Current baseline stated as **1 m**. | **Less than 1 m in FR1** and **0.1 m in FR2**. | Large apertures in FR1; large bandwidths and arrays in FR2; numerous transmitters and receivers in both frequency ranges. |
 | **QT6: Object velocity-estimation accuracy** | Current baseline stated as **1 m/s**. | **Less than 1 m/s in FR1**. | Large integration times in FR1. |
 
 #### Comparison with the 3GPP references in the paper
 
-These are **6G-DISAC project targets**, not values that the paper identifies as
-3GPP-mandated ISAC requirements. The comparison points are mixed: QT1 uses
-Release 18 MIMO benchmarks, and QT3 cites TR 38.684; neither is presented in
-this section as a distributed-ISAC KPI specification. The QT3 identifier
-should be verified: the paper prints “TR 38.684,” while the [3GPP portal entry
-for TR 38.864](https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3987)
-describes a different report, “Study on network energy savings for NR.” Do not
-silently replace the paper's cited number with 38.864.
+These are **6G-DISAC project targets**, not 3GPP-mandated ISAC requirements or
+reported simulation results. QT1 refers to Release 18 MIMO benchmarks but does
+not specify a benchmark configuration. For QT3, the source prints “TR 38.684.”
+That identifier could not be verified as the cited energy-efficiency reference.
+The [3GPP portal entry for TR 38.864](https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3987)
+is titled “Study on network energy savings for NR,” a different report; it is
+not a verified correction for the source's citation. Therefore the QT3
+comparison baseline is unresolved and must not be presented as a verified
+standard or silently changed to TR 38.864.
 
 The paper also cites the 3GPP SA1 Release 19 study on ISAC [4], identified in
 the [3GPP portal as TR 22.837, “Study on Integrated Sensing and
@@ -868,13 +932,13 @@ and UE positioning, while significant architectural changes are needed for
 full sensing integration.
 
 Accordingly, do not read the QT numbers as standardized 3GPP thresholds or as
-directly comparable benchmark results. The source does not give enough
-measurement definitions or test conditions here to normalize the targets
-against the cited baselines. A fair comparison should align the KPI definition,
-frequency range, deployment and node configuration, bandwidth/aperture, and
-resource allocation; these factors affect whether a reported improvement is
-comparable across a single-node 3GPP baseline and collaborative multisensor
-DISAC.
+directly reproducible simulator acceptance criteria. The source does not give
+enough measurement definitions or test conditions to normalize all targets
+against the cited baselines. A simulation must separately declare the KPI
+definition (including error statistic and percentile), frequency, deployment
+and node configuration, bandwidth/aperture, resource allocation, and
+communication load before comparing results. This is especially important
+when comparing a single-node baseline with collaborative multisensor DISAC.
 
 ## 9. Practical pitfalls and decision checklist
 
