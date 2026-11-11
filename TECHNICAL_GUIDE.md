@@ -802,7 +802,7 @@ The authors state that the data set and code are not publicly available; the
 example is therefore a qualitative reference point, not a directly
 reproducible benchmark.
 
-### 8.6 Source-paper metrics and KPI targets
+### 8.6 Source-paper metrics and KPI targets (Not Satisfied with the update, need to revisit details from paper!)
 
 The 6G-DISAC paper frames its metrics around PHY-layer and system performance:
 waveform shaping, hardware compliance, and new signal- and semantic-processing
