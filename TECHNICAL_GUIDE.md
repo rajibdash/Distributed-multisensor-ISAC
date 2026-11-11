@@ -9,11 +9,19 @@ reproduced from the reserach paper.
 
 Integrated sensing and communications (ISAC) reuses a mobile communications
 network's transmitters, receivers, spectrum, OFDM waveform, synchronization,
-computing, and data transport to detect and track objects that do not carry a
-radio tag. **Distributed multisensor ISAC (MS-ISAC)** treats spatially separated
-radio nodes as a cooperative multistatic radar network. It's sensing links jointly
-illuminate and observe a target there by delay, Doppler, and optionally direction
-measurements from several geometries are fused into a 3D target state.
+computing, and data transport to detect and track objects(localizing of passive 
+objects) that do not carry a radio tag. **Distributed multisensor ISAC (MS-ISAC)** 
+treats spatially separated radio nodes as a cooperative multistatic radar network. 
+It's sensing links jointly illuminate and observe a target there by delay, Doppler, 
+and optionally direction measurements from several geometries are fused into a 3D 
+target state.
+
+So, RAN Advanced ISAC networks will rely on distributed infrastructure, multisensor uplink and 
+downlink, or meshed sidelink access. In this way, ISAC develops into a MS-MIMO (multisensor 
+multiple input multiple output) network which constitutes a **distributed MIMO** radar network. 
+Multisensor link coordination and synchronization are becoming crucial today. Many multisensor 
+access and signaling techniques find their communication counterpart in MU-MIMO and cooperative 
+multilink communications (CoMP transmission and reception) and can be adopted from there as well.
 
 What are central engineering ideas here briefly:
 
