@@ -5,6 +5,31 @@ principles, usecases and measurement example in the source paper into a simulati
 reference. It combines implementation oriented explanations with selected figures 
 reproduced from the reserach paper.
 
+## 0. Objective
+
+This 6G-DISAC document aims to bring the integrated sensing and communication (ISAC) vision to life by 
+adopting a holistic perspective with widely distributed intelligent infrastructure compatible with real 
+world integration constraints and future wireless network flexibility requirements. The project addresses 
+both fundamental and practical challenges, such as tracking connected UEs and **passive objects**, performing 
+ISAC with many distributed base stations, efficient distributed signal processing and machine learning for 
+semantic ISAC, incorporating extremely large MIMO technologies and reconfigurable intelligent surfaces, 
+and intelligent sensing activation.
+
+Here, 6G-DISAC will focus on the distributed implementation of ISAC, unlocking real sensing applications 
+and providing a multi perspective view of networks in space and time for tangible communication gains. 
+It will bridge theoretical approaches with operational and standards compatible distributed joint 
+communication and sensing.
+
+6G-DISAC brings together world leading actors across the value chain, including operators, network vendors, 
+verticals, SMEs, research laboratories, and academic institutions. Together, the 6G-DISAC partners will define 
+use cases, requirements, and design an innovative network architecture. They will also develop novel physical 
+layer waveforms, distributed sensing and communications methods, optimised resource allocation methods, and 
+protocols. Several demonstrations will validate the key 6G-DISAC concepts. 
+
+This project will revolutionise various applications, from extended reality and robot human interaction to 
+vehicular safety functions and **improving communication key performance indicators with sensing aided 
+communications**.
+
 ## 1. Executive summary
 
 Integrated sensing and communications (ISAC) reuses a mobile communications
