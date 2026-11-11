@@ -802,6 +802,55 @@ The authors state that the data set and code are not publicly available; the
 example is therefore a qualitative reference point, not a directly
 reproducible benchmark.
 
+### 8.6 Source-paper metrics and KPI targets
+
+The 6G-DISAC paper frames its metrics around PHY-layer and system performance:
+waveform shaping, hardware compliance, and new signal- and semantic-processing
+techniques. It calls out the communication-versus-sensing resource-allocation
+trade-off as essential to determining whether use-case KPIs are met. Evaluation
+must extend beyond the usual single-sensing-receive-node metrics to collaborative
+sensing with multiple nodes. The paper says the framework will be evaluated
+through **seven** distinct Quantitative Targets (QTs), but the Metrics and KPIs
+section enumerates only **six** (QT1–QT6); it gives no QT7, so none is inferred
+here.
+
+| Target | Metric and baseline/reference stated in the paper | 6G-DISAC target | Rationale or enabling approach stated in the paper |
+|---|---|---|---|
+| **QT1: Spectral efficiency** | Relative comparison with current 3GPP Release 18 MIMO benchmarks. | **30% relative improvement**; no frequency range is specified. | Sensing-aided communications are expected to refine MIMO channel-matrix and geometric-channel-parameter estimates, improving spectral efficiency. |
+| **QT2: User positioning accuracy** | The paper says the current baseline is undefined. | Absolute accuracy of **0.01 m in FR2** and **0.1 m in FR1**. | Combine positioning and sensing, using large bandwidths and apertures. |
+| **QT3: Energy efficiency** | The paper says it compares with standards outlined in **3GPP TR 38.684**. | **40% improvement in FR2**. | As for QT1, sensing-aided communication is expected to improve geometric-channel-parameter estimation and thereby energy efficiency. |
+| **QT4: User orientation accuracy** | Current baseline stated as **1°–5°**. | **Less than 1° in FR2**. | UE-side antenna arrays and numerous base stations (BSs) or access points. |
+| **QT5: Object positioning accuracy** | Current baseline stated as **1 m**. | **Less than 1 m in FR1** and **0.1 m in FR2**. | Large apertures in FR1; large bandwidths and arrays in FR2; numerous transmitters and receivers in both frequency ranges. |
+| **QT6: Object velocity-estimation accuracy** | Current baseline stated as **1 m/s**. | **Less than 1 m/s in FR1**. | Large integration times in FR1. |
+
+#### Comparison with the 3GPP references in the paper
+
+These are **6G-DISAC project targets**, not values that the paper identifies as
+3GPP-mandated ISAC requirements. The comparison points are mixed: QT1 uses
+Release 18 MIMO benchmarks, and QT3 cites TR 38.684; neither is presented in
+this section as a distributed-ISAC KPI specification. The QT3 identifier
+should be verified: the paper prints “TR 38.684,” while the [3GPP portal entry
+for TR 38.864](https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3987)
+describes a different report, “Study on network energy savings for NR.” Do not
+silently replace the paper's cited number with 38.864.
+
+The paper also cites the 3GPP SA1 Release 19 study on ISAC [4], identified in
+the [3GPP portal as TR 22.837, “Study on Integrated Sensing and
+Communication”](https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=4044),
+but supplies no numerical KPI baseline from that study for QT1–QT6. In the
+adjacent architectural discussion, it says 3GPP supports eMBB, URLLC, mMTC,
+and UE positioning, while significant architectural changes are needed for
+full sensing integration.
+
+Accordingly, do not read the QT numbers as standardized 3GPP thresholds or as
+directly comparable benchmark results. The source does not give enough
+measurement definitions or test conditions here to normalize the targets
+against the cited baselines. A fair comparison should align the KPI definition,
+frequency range, deployment and node configuration, bandwidth/aperture, and
+resource allocation; these factors affect whether a reported improvement is
+comparable across a single-node 3GPP baseline and collaborative multisensor
+DISAC.
+
 ## 9. Practical pitfalls and decision checklist
 
 - **Do not conflate delay and range:** bistatic range is a sum of two ranges;
